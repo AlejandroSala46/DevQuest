@@ -20,7 +20,11 @@ class MainActivity : AppCompatActivity() {
         val btnConfig = findViewById<Button>(R.id.btnConfig)
         val btnExit = findViewById<Button>(R.id.btnExit)
 
-        btnPlay.setOnClickListener { v: View? -> }
+        btnPlay.setOnClickListener { v: View? ->
+            val intent = Intent(this, GameActivity::class.java)
+            intent.putExtra("USER", user)
+            startActivity(intent)
+        }
 
         btnConfig.setOnClickListener { v: View? -> }
 
