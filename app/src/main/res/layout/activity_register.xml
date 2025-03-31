@@ -1,0 +1,84 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bckgrnd_menu"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <!-- Logo -->
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_margin="10dp"
+        android:src="@drawable/logo_devquest" />
+
+    <!-- Título -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/medieval"
+        android:gravity="center"
+        android:text="Bienvenido a DevQuest"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@android:color/black"
+        android:textSize="34sp" />
+
+    <!-- Campo Nombre de Usuario -->
+    <EditText
+        android:id="@+id/etUsuario"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:background="@drawable/et_borde"
+        android:hint="Nombre de aventurero"
+        android:padding="10dp" />
+
+    <!-- Campo Correo Electrónico -->
+    <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:background="@drawable/et_borde"
+        android:hint="Correo electrónico"
+        android:inputType="textEmailAddress"
+        android:padding="10dp" />
+
+    <!-- Campo Contraseña -->
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:background="@drawable/et_borde"
+        android:hint="Clave mágica"
+        android:inputType="textPassword"
+        android:padding="10dp" />
+
+    <!-- Campo Confirmar Contraseña -->
+    <EditText
+        android:id="@+id/etConfirmPassword"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:background="@drawable/et_borde"
+        android:hint="Confirmar clave"
+        android:inputType="textPassword"
+        android:padding="10dp" />
+
+    <!-- Botón Registro -->
+    <Button
+        android:id="@+id/btnRegister"
+        android:layout_width="252dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/gold"
+        android:text="Registrar aventurero"
+        android:textColor="@android:color/black" />
+
+    <!-- Botón para ir a Login -->
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="252dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/gold"
+        android:text="Ya tengo cuenta, entrar"
+        android:textSize="12sp"
+        android:textColor="@android:color/black" />
+</LinearLayout>

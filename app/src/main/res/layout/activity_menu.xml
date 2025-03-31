@@ -1,0 +1,64 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bckgrnd_menu"
+    android:gravity="center"
+    android:orientation="vertical">
+
+
+    <!-- Campo Usuario -->
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_margin="10dp"
+        android:src="@drawable/logo_devquest" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/medieval"
+        android:gravity="center"
+        android:text="MENU"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@android:color/black"
+        android:textSize="34sp" />
+
+    <!-- Botón Jugar -->
+    <Button
+        android:id="@+id/btnPlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/btn_background"
+        android:fontFamily="@font/medieval"
+        android:padding="15dp"
+        android:text="Jugar"
+        android:textColor="@android:color/white"
+        android:textSize="20sp" />
+
+    <!-- Botón Configuración -->
+    <Button
+        android:id="@+id/btnConfig"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/btn_background"
+        android:fontFamily="@font/medieval"
+        android:padding="15dp"
+        android:text="Configuración"
+        android:textColor="@android:color/white"
+        android:textSize="20sp" />
+
+    <!-- Botón Salir -->
+    <Button
+        android:id="@+id/btnExit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/btn_background"
+        android:fontFamily="@font/medieval"
+        android:padding="15dp"
+        android:text="Salir"
+        android:textColor="@android:color/white"
+        android:textSize="20sp" />
+</LinearLayout>

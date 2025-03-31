@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Palabras arrastrables -->
+    <LinearLayout
+        android:id="@+id/dragContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/word1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/holo_blue_light"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="Manzana"
+            android:textColor="#4E342E"
+            tools:ignore="HardcodedText" />
+
+        <!--suppress InsufficientTextContrast -->
+        <TextView
+            android:id="@+id/word2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/holo_green_light"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="Pan"
+            android:textColor="#0D47A1"
+            tools:ignore="HardcodedText" />
+
+
+    </LinearLayout>
+
+    <!-- Lista de la compra -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp"/>
+</LinearLayout>

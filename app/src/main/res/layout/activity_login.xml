@@ -1,0 +1,59 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bckgrnd_menu"
+    android:gravity="center">
+
+
+    <!-- Campo Usuario -->
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_margin="10dp"
+        android:src="@drawable/logo_devquest" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/medieval"
+        android:gravity="center"
+        android:text="Bienvenido a DevQuest"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@android:color/black"
+        android:textSize="34sp" />
+
+    <EditText
+        android:id="@+id/etUsuario"
+        android:layout_width="250dp"
+        android:layout_height="60sp"
+        android:background="@drawable/et_borde"
+        android:hint="Nombre de aventurero"
+        android:padding="10dp" />
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:background="@drawable/et_borde"
+        android:hint="Clave mágica"
+        android:inputType="textPassword"
+        android:padding="10dp" />
+
+    <!-- Botón Login -->
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="252dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/gold"
+        android:text="Entrar a la aventura"
+        android:textColor="@android:color/black" />
+    <Button
+        android:id="@+id/btnRegister"
+        android:layout_width="252dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/gold"
+        android:text="Crear una nueva cuenta"
+        android:textSize="12sp"
+        android:textColor="@android:color/black" />
+</LinearLayout>

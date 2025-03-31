@@ -1,0 +1,8 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <color android:color="#3b2f2f"/> <!-- Marrón oscuro medieval -->
+    </item>
+    <item>
+        <bitmap android:src="@drawable/bckgrnd_menu" android:gravity="center"/>
+    </item>
+</layer-list>
