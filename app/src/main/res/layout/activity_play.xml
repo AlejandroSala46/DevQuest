@@ -36,14 +36,21 @@
                 android:text="Script"
                 android:textAlignment="center" />
 
-            <LinearLayout
-                android:id="@+id/Script"
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="#ffce9f"
-                android:clickable="true"
-                android:orientation="vertical"/>
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:id="@+id/Script"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ffce9f"
+                    android:clickable="true"
+                    android:orientation="vertical"/>
+
+            </ScrollView>
+
 
 
         </LinearLayout>

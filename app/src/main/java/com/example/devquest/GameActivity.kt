@@ -8,8 +8,10 @@ import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
@@ -27,6 +29,16 @@ import kotlin.random.Random
 class GameActivity : AppCompatActivity() {
 
     var listaPociones: ArrayList<Pocion> = ArrayList<Pocion>()
+    var pociones: HashMap<String, Int> = HashMap<String, Int>()
+    var scriptTrancript : Array<Array<Array<Array<String>>>>  = Array(4){
+        Array(4) {
+            Array(4) {
+                Array(4) {
+                    ""
+                }
+            } // Inicializamos con valores ""
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,12 +50,14 @@ class GameActivity : AppCompatActivity() {
         val variables = findViewById<LinearLayout >(R.id.Variables)
         val script = findViewById<LinearLayout>(R.id.Script)
 
+
+
         enableDragAndDrop(script)
 
         createCommands(commands)
 
 
-        var pociones: HashMap<String, Int> = HashMap<String, Int>()
+
 
         pociones.put("SALUD", 5);
         pociones.put("VENENO", 2);
@@ -51,6 +65,7 @@ class GameActivity : AppCompatActivity() {
         pociones.put("VELOCIDAD", 4);
 
         createPotions(pociones)
+
 
     }
 
@@ -71,8 +86,8 @@ class GameActivity : AppCompatActivity() {
     private fun createCommands(commands: LinearLayout) {
         val textView = TextView(this).apply {
             text = "IF"
-            textSize = 18f
-            setPadding(32, 16, 32, 16)
+            textSize = 15f
+            setPadding(32, 5, 32, 5)
             setTextColor(resources.getColor(android.R.color.white, theme)) // Texto blanco
             background = resources.getDrawable(R.drawable.rounded_button, theme)// Agregar espacio dentro del botón
             layoutParams = RelativeLayout.LayoutParams(
@@ -132,6 +147,8 @@ class GameActivity : AppCompatActivity() {
 
                         script.addView(newLayout) // Agregar nuevo bloque al script
 
+                        //TODO
+                        newLayout.S
                         // Hacer que el nuevo TextView también sea arrastrable si es necesario
                         setDragLinear(newLayout)
                         //setOnDragListenerForDelete(script, newLayout)
@@ -159,16 +176,24 @@ class GameActivity : AppCompatActivity() {
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.WRAP_CONTENT
             )
-            setPadding(16, 16, 16, 16) // Agregar un poco de espaciado al contenedor
+            setPadding(16, 5, 16, 5) // Agregar un poco de espaciado al contenedor
         }
         // Cargar la fuente medieval
         val typeface = ResourcesCompat.getFont(this, R.font.medieval)
 
+        val conditionLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL // Alineación horizontal
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setPadding(16, 5, 0, 16)
+        }
         // Crear el primer TextView con el contenido del texto arrastrado
         val firstTextView = TextView(this).apply {
             text = draggedText
-            textSize = 18f // Puedes ajustar el tamaño del texto
-            setPadding(32, 16, 32, 16)
+            textSize = 15f // Puedes ajustar el tamaño del texto
+            setPadding(32, 16, 0, 16)
             setTextColor(resources.getColor(android.R.color.black, theme))
             gravity = android.view.Gravity.LEFT
 
@@ -178,6 +203,21 @@ class GameActivity : AppCompatActivity() {
             }
         }
 
+        // Crear el Spinner con opciones
+        val spinner = Spinner(this).apply {
+            val opciones = setListPotions()
+            adapter = ArrayAdapter(this@GameActivity, android.R.layout.simple_spinner_dropdown_item, opciones)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            id = View.generateViewId()
+        }
+
+        conditionLayout.addView(firstTextView)
+        conditionLayout.addView(spinner)
+
+
         // Crear el segundo LinearLayout dentro del nuevo LinearLayout (puedes agregar más elementos aquí si lo necesitas)
         val innerLinearLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL // Puedes cambiar la orientación aquí si prefieres apilar horizontalmente
@@ -186,14 +226,14 @@ class GameActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             setBackgroundColor(0x2200FF00)
-            setPadding(70, 100, 16, 100)// Color de fondo para ver el área ocupada por el inner layout
+            setPadding(25, 100, 0, 100)// Color de fondo para ver el área ocupada por el inner layout
         }
 
         // Crear el segundo TextView (esto puede ser otro tipo de información o elemento)
         val secondTextView = TextView(this).apply {
             text = "End" + draggedText // Aquí puedes agregar un texto diferente si lo prefieres
-            textSize = 16f
-            setPadding(32, 16, 32, 16)
+            textSize = 15f
+            setPadding(32, 5, 0, 5)
             setTextColor(resources.getColor(android.R.color.black, theme))
             gravity = android.view.Gravity.LEFT
 
@@ -204,7 +244,7 @@ class GameActivity : AppCompatActivity() {
         }
 
         // Agregar los elementos al LinearLayout principal
-        newLayout.addView(firstTextView)
+        newLayout.addView(conditionLayout)
         newLayout.addView(innerLinearLayout)
         newLayout.addView(secondTextView)
 
@@ -239,6 +279,48 @@ class GameActivity : AppCompatActivity() {
 
 
         }
+    }
+
+    private fun setListPotions(): MutableList<String> {
+        val listaPociones = mutableListOf<String>()
+        for (pocion in pociones) {
+            listaPociones.add(pocion.key)
+        }
+        return listaPociones
+
+    }
+
+    fun getIndex(script : ViewGroup, targetView: View, column : Int): Pair<Int, Int> {
+        // Iterar sobre los hijos directos del ViewGroup
+
+        val targetIndex = script.indexOfChild(targetView)
+        if (script.getChildAt(targetIndex).id == targetView.id) {
+            return Pair(column, targetIndex)
+        }
+
+        val viewGroup = script.getChildAt(targetIndex) as ViewGroup
+
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+
+            // Si el hijo es el targetView, devolver el índice
+            if (child == targetView) {
+                return Pair(column, i)
+            }
+
+            // Si el hijo es un ViewGroup (puede tener más hijos dentro), llamar recursivamente
+            if (child is ViewGroup) {
+                val newColumn = column + 1
+                val childIndex = getIndex(child, targetView, column)
+                if (childIndex.second != -1) {
+                    // Si lo encontramos dentro del ViewGroup, devolvemos el índice
+                    return Pair(column, i)
+                }
+            }
+        }
+
+        // Si no encontramos el targetView, devolver -1
+        return Pair(column, -1)
     }
 
 }
