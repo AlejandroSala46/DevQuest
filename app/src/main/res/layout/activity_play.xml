@@ -98,4 +98,31 @@
         </LinearLayout>
 
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btnExit"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_background"
+            android:fontFamily="@font/medieval"
+            android:padding="15dp"
+            android:text="Salir"
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
+        <Button
+            android:id="@+id/btnPlay"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_background"
+            android:fontFamily="@font/medieval"
+            android:padding="15dp"
+            android:text="Jugar"
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
+    </LinearLayout>
 </LinearLayout>
