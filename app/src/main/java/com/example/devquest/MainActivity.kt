@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         val btnExit = findViewById<Button>(R.id.btnExit)
 
         btnPlay.setOnClickListener { v: View? ->
-            val intent = Intent(this, GameActivity::class.java)
+            val intent = Intent(this, ListLevelsActivity::class.java)
             intent.putExtra("USER", user)
             startActivity(intent)
         }

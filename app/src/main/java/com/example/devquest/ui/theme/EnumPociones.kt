@@ -1,10 +1,12 @@
 package com.example.devquest.ui.theme
 
-enum class TipoPocion( private var type : String, private var nombre: String?, private var estante: Int) {
-    VENENO("Pocion","Pocion de Veneno",1),
-    SALUD("Pocion","Pocion de Salud", 2),
-    VELOCIDAD("Elixir","Elixir de Velocidad",3),
-    VIGOR("Elixir","Elixir de Vigor", 4);
+import com.example.devquest.R
+
+enum class TipoPocion( private var type : String, private var nombre: String?, private var estante: Int, private var imagen: Int) {
+    VENENO("Pocion","Pocion de Veneno",1, R.drawable.potion_veneno),
+    SALUD("Pocion","Pocion de Salud", 2, R.drawable.potion_veneno),
+    VELOCIDAD("Elixir","Elixir de Velocidad",3, R.drawable.potion_veneno),
+    VIGOR("Elixir","Elixir de Vigor", 4, R.drawable.potion_veneno);
 
 
     fun getNombre(): String {
@@ -13,5 +15,9 @@ enum class TipoPocion( private var type : String, private var nombre: String?, p
 
     fun getEstante(): Int {
         return estante
+    }
+
+    fun getImagen(): Int {
+        return imagen
     }
 }

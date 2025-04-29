@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.cardview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -60,5 +61,6 @@ dependencies {
     implementation ("androidx.core:core-ktx:1.12.0")  // En lugar de 1.15.0
     implementation (libs.androidx.recyclerview.v132)  // En lugar de 1.4.0
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("androidx.appcompat:appcompat:1.6.1")
 }

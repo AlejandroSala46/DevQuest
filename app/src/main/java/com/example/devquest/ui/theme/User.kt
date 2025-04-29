@@ -6,33 +6,42 @@ import android.os.Parcelable
 data class User(
     val name: String,
     val email: String,
-    val password: String
+    val password: String,
+    val LevelsComplete: List<Level> // Lista de niveles completos
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readString() ?: "",  // Asegúrate de leer un valor no nulo
         parcel.readString() ?: "",
-        parcel.readString() ?: ""
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        readLevelList(parcel) // Método auxiliar para leer la lista de niveles
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(name)
         parcel.writeString(email)
         parcel.writeString(password)
+        writeLevelList(parcel, LevelsComplete) // Método auxiliar para escribir la lista de niveles
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
-    companion object {
-        @JvmField
-        val CREATOR: Parcelable.Creator<User> = object : Parcelable.Creator<User> {
-            override fun createFromParcel(parcel: Parcel): User {
-                return User(parcel)
+    companion object CREATOR : Parcelable.Creator<User> {
+        override fun createFromParcel(parcel: Parcel): User = User(parcel)
+        override fun newArray(size: Int): Array<User?> = arrayOfNulls(size)
+
+        private fun readLevelList(parcel: Parcel): List<Level> {
+            val size = parcel.readInt()
+            val list = mutableListOf<Level>()
+            repeat(size) {
+                list.add(parcel.readParcelable<Level>(Level::class.java.classLoader) ?: Level(0, "", "", hashMapOf(), emptyList(), false))
             }
+            return list
+        }
 
-            override fun newArray(size: Int): Array<User?> {
-                return arrayOfNulls(size)
+        private fun writeLevelList(parcel: Parcel, list: List<Level>) {
+            parcel.writeInt(list.size)
+            for (level in list) {
+                parcel.writeParcelable(level, 0)
             }
         }
     }

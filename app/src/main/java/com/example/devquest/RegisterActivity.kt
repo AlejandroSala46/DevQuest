@@ -26,7 +26,7 @@ class RegisterActivity: AppCompatActivity(){
             if (usuario.isNotEmpty() && password.isNotEmpty() && email.isNotEmpty()) {
                 Toast.makeText(this, "Bienvenido, $usuario!", Toast.LENGTH_SHORT).show()
 
-                val user = User(usuario, email, password);
+                val user = User(usuario, email, password, emptyList());
 
                 val intent = Intent(this, LoginActivity::class.java)
 

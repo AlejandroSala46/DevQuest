@@ -2,185 +2,217 @@ package com.example.devquest
 
 import android.content.ClipData
 import android.content.ClipDescription
+import android.content.Intent
 import android.graphics.Rect
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.Spinner
-import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.res.ResourcesCompat
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.devquest.ui.theme.Comando
 import com.example.devquest.ui.theme.Pocion
 import com.example.devquest.ui.theme.TipoComandos
 import com.example.devquest.ui.theme.TipoPocion
 import com.example.devquest.ui.theme.User
 import kotlin.random.Random
+import android.graphics.Color
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
+import com.example.devquest.ui.theme.Level
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+
 
 class GameActivity : AppCompatActivity() {
 
-    var listaPociones: ArrayList<Pocion> = ArrayList<Pocion>()
-    var pociones: HashMap<String, Int> = HashMap<String, Int>()
-    var scriptTranscript: ArrayList<Comando> = ArrayList<Comando>()
-    var listComands: ArrayList<Comando> = ArrayList<Comando>()
+    private var listaPociones: ArrayList<Pocion> = ArrayList()
+    private var pocionesToSort: HashMap<String, Int> = HashMap()
+    private var scriptTranscript: ArrayList<Comando> = ArrayList()
+    private var listComands: ArrayList<Comando> = ArrayList()
+    private var gameJob: Job? = null
+    private lateinit var levelCompletedLayout: FrameLayout
+    private lateinit var continueButton: Button
+    private lateinit var restartButton: Button
+    private lateinit var levelMessage: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play)
+        Log.d("GameActivity", "onCreate")
 
         val user = intent.getParcelableExtra<User>("USER")
+        val levelId = intent.getIntExtra("LEVEL_ID", -1)
+
+
 
         val commands = findViewById<LinearLayout>(R.id.Commands)
         val variables = findViewById<LinearLayout>(R.id.Variables)
         val script = findViewById<LinearLayout>(R.id.Script)
         val btnPlay = findViewById<Button>(R.id.btnPlay)
         val btnExit = findViewById<Button>(R.id.btnExit)
+        val potionView: FrameLayout? = findViewById<FrameLayout>(R.id.Potion)
+        val textPotions: TextView = findViewById(R.id.TextPotions)
+
+        inicializateLevel(levelId ,user!!, textPotions)
 
         script.id = View.generateViewId()
-
-        listComands.add(Comando(TipoComandos.IF))
-        listComands.add(Comando(TipoComandos.ESTANTE))
 
         enableDragAndDrop(script)
 
         createCommands(commands, variables)
 
+        var isGameRunning = false
+
         btnPlay.setOnClickListener { v: View? ->
-            startGame()
+            if (isGameRunning) {
+                // Si el juego está en marcha, lo detenemos
+                stopGame()
+                btnPlay.text = "Jugar"
+            } else {
+                // Si el juego no está en marcha, lo iniciamos
+                startGame(potionView, script)
+                btnPlay.text = "Parar"
+            }
+            isGameRunning = !isGameRunning // Cambiar el estado del juego
         }
 
-
-        //pociones.put("SALUD", 5)
-        pociones.put("VENENO", 2)
-        /*pociones.put("VIGOR", 1)
-        pociones.put("VELOCIDAD", 4)*/
-
-        createPotions(pociones)
-
+        btnExit.setOnClickListener { v: View? ->
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()  // Cierra la actividad actual
+        }
 
     }
 
-    private fun startGame() {
+    private fun stopGame(): Boolean {
+        // Cancelar el juego en ejecución
+        gameJob?.cancel()
+        return false
+    }
 
+    private fun startGame(potionView: FrameLayout?, script: LinearLayout) {
         scriptTranscript.sortWith(compareBy({ it.column }, { it.row }))
 
         for (comando in scriptTranscript) {
-            Log.d("GameActivityCommand", comando.toString())
+            Log.d("ComandoGame", comando.toString())
         }
 
-        for (pocion in listaPociones) {
-            Log.d("Pocion", pocion.toString())
+        var win = true
+        gameJob = lifecycleScope.launch {
+            for (pocion in listaPociones) {
+                Log.d("GamePocion", pocion.toString())
 
-            var pocionSituada : Boolean = false
+                potionView!!.setBackgroundResource(pocion.imagen)
 
+                val numEstante: Int? = playCommands(0, 0, script.id, pocion)
 
-            val numEstante : Int? = playCommands(0, 0, 1, pocion)
-
-            if (numEstante != null) {
-                pocionSituada = true
-            } else {
-                Log.d("GameActivity", "No se pudo ubicar la pocion, num estante es null")
-                break
-            }
-
-            if (pocionSituada){
-
-                if(numEstante == pocion.estante){
-                    Log.d("GameActivity", "Se pudo ubicar la pocion")
-                }
-                else{
-                    Log.d("GameActivity", "No se pudo ubicar la pocion, $numEstante es distinto a ${pocion.estante}")
+                if (numEstante != null) {
+                    if (numEstante == pocion.estante) {
+                        Log.d("GameActivity", "Se pudo ubicar la pocion")
+                        potionView.setBackgroundResource(0)
+                    } else {
+                        Log.d("GameActivity", "No se pudo ubicar la pocion, $numEstante es distinto a ${pocion.estante}")
+                        win = false
+                        break
+                    }
+                } else {
+                    Log.d("GameActivity", "No se pudo ubicar la pocion, num estante es null")
+                    win = false
                     break
                 }
 
+                // Esperar 5 segundos sin bloquear la UI
+                potionView!!.setBackgroundResource(0)
+                delay(1000)
             }
-
+            if (win) {
+                showLevelCompletedPopup(1)
+            }
         }
+
+
     }
 
-    private fun playCommands(column: Int, row: Int, parent: Int, pocion: Pocion): Int? {
+    private suspend fun playCommands(column: Int, row: Int, parent: Int, pocion: Pocion): Int? {
 
         val command: Comando?
+        val colorRed = Color.parseColor("#FFFF9999")
+        val colorBckgrnd = Color.parseColor("#FFFFCE9F")
 
         try {
             // Buscar el comando que coincide con las coordenadas
             command = scriptTranscript.find { it.column == column && it.row == row && parent == it.parentLayout!!.id }
-            command!!.layout!!.setBackgroundColor(0xFFFF9999.toInt())
+            changeColorOfLayout(command!!.layout!!, colorRed)
+            Log.d("GameActivity", "Se ha cambiado el color del layout : ${command.layoutDrop}")
 
         } catch (e: Exception) {
             // Si no se encuentra el comando, devolver null
             return null
         }
 
+        // Espera 4 segundos sin bloquear la UI
+        //delay(4000)
+
         Log.d("GameActivity", "Comando: $command")
 
-        // Procesar según el tipo de comando
-        return when (command.tipoComandos) {
+        return when (command.tipoComandos.tipo) {
 
-            // Si es un comando IF
-            TipoComandos.IF -> {
+            TipoComandos.Tipo.IF -> {
                 val varControl = command.spinner!!.selectedItem.toString()
-
                 Log.d("GameActivity", "IF($varControl = ${pocion.type})")
 
-                // Realizamos la comparación y luego retornamos el valor adecuado
+                delay(1000)
+                command.layout!!.setBackgroundColor(colorBckgrnd)
+
                 if (ifCommand(pocion, varControl)) {
-                    // Llamada recursiva si el comando IF es verdadero
-                    val nextCommand = playCommands(column.plus(1), 0, command.layout!!.id.toInt(), pocion)
 
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        command!!.layout!!.setBackgroundColor(0xFFFFCE9F.toInt())
-                    }, 1000)
-
+                    val nextCommand = playCommands(column + 1, 0, command.layoutDrop!!.id, pocion)
+                    // Después de 1 segundo, restaurar el color
                     if (nextCommand == null) {
-                        // Si no encontramos un comando después de la ejecución de IF, retrocedemos una columna y avanzamos una fila
                         return playCommands(column, row + 1, parent, pocion)
-
                     } else {
                         return nextCommand
                     }
-
                 } else {
-                    // Llamada recursiva si el comando IF es falso
-                    val nextCommand = playCommands(column, row.plus(1), parent, pocion)
                     Log.d("GameActivity", "FALSE")
-                    return nextCommand
+                    return playCommands(column, row + 1, parent, pocion)
                 }
             }
 
-            // Si es un comando ESTANTE
-            TipoComandos.ESTANTE -> {
-                val estante = command.nombreComando.toString()
+            TipoComandos.Tipo.ESTANTE -> {
+                val estante = command.nombreComando
                 val numEstante = extractNumFromEstante(estante)
 
-                Handler(Looper.getMainLooper()).postDelayed({
-                    command!!.layout!!.setBackgroundColor(0xFFFFCE9F.toInt())
-                }, 1000)
+                delay(1000)
+                command.layout!!.setBackgroundColor(colorBckgrnd)
 
                 Log.d("GameActivity", "ESTANTE($estante) con numero $numEstante")
                 return numEstante
             }
 
-            // Si no es ninguno de los anteriores
             else -> null
         }
     }
 
 
-
+    private fun changeColorOfLayout(Layout: LinearLayout, color: Int) {
+        val newDrawable = GradientDrawable()
+        newDrawable.setColor(color)
+        Layout.background = newDrawable
+    }
 
     private fun ifCommand(pocion: Pocion, varControl: String): Boolean {
         return varControl == pocion.type
@@ -216,27 +248,16 @@ class GameActivity : AppCompatActivity() {
     }
 
 
-    private fun createPotions(pociones: HashMap<String, Int>) {
 
-        for (pocion in pociones) {
-            for (i in 1..pocion.value) {
-                val pociontoCreate = Pocion(TipoPocion.valueOf(pocion.key))
-                listaPociones.add(pociontoCreate)
-            }
-        }
-
-        listaPociones.shuffle(Random(System.currentTimeMillis()))
-
-    }
 
     private fun createCommands(commands: LinearLayout, variables: LinearLayout) {
         for (command in listComands) {
 
             val textView = textCommands(command.nombreComando)
 
-            if (command.tipoComandos == TipoComandos.IF) {
+            if (command.tipoComandos.tipo == TipoComandos.Tipo.IF) {
                 commands.addView(textView)
-            } else if (command.tipoComandos == TipoComandos.ESTANTE) {
+            } else if (command.tipoComandos.tipo == TipoComandos.Tipo.ESTANTE) {
                 variables.addView(textView)
             }
 
@@ -351,6 +372,10 @@ class GameActivity : AppCompatActivity() {
 
                         script.removeView(layoutToRemove) // Eliminar el layout
                         updateRowNumAfterDelete(layoutToRemove)
+
+                        for (comando in scriptTranscript) {
+                            Log.d("Comando", "Lista comandos despues de borrar: $comando")
+                        }
                     }
                     true
                 }
@@ -363,33 +388,42 @@ class GameActivity : AppCompatActivity() {
     private fun updateRowNumAfterDelete(layautToRemove: LinearLayout){
 
         val comandToRemove : Comando?
-
+        Log.d("ComandoRemoveId", layautToRemove.id.toString())
         try{
             comandToRemove = scriptTranscript.find { it.layout == layautToRemove }!!
         }catch (e: Exception){
+            Log.d("ComandoRemove", "No se encontro el layout a borrar")
             return
         }
-        Log.d("Comando", comandToRemove.toString())
+        Log.d("ComandoRemove", comandToRemove.toString())
 
-        for (comando in scriptTranscript) {
+        for (comando in scriptTranscript.toList()) {
 
             if (comando.parentLayout == comandToRemove.parentLayout && comando.row!! > comandToRemove.row!!){
                 comando.row = comando.row!!.minus(1)
+            }
+            if (comando.parentLayout == comandToRemove.layoutDrop){
+                updateRowNumAfterDelete(comando.layout!!)
             }
 
         }
 
         scriptTranscript.removeIf{it.layout == comandToRemove.layout}
 
-        for (comando in scriptTranscript) {
-            Log.d("Comando", "Lista comandos despues de borrar: $comando")
-        }
+
 
 
     }
 
 
     private fun createDropLayoutCommand(draggedText: String): Pair<LinearLayout, Comando> {
+
+        val backgroundDrawable = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(Color.parseColor("#FFFFCE9F")) // Fondo con color
+            cornerRadius = 24f
+            setStroke(4, Color.BLACK) // Grosor del borde (4px) y color negro
+        }
         // Crear un nuevo LinearLayout principal para contener
         val newLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL // Apilar verticalmente
@@ -397,7 +431,8 @@ class GameActivity : AppCompatActivity() {
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.WRAP_CONTENT
             )
-            setPadding(16, 5, 16, 5) // Agregar un poco de espaciado al contenedor
+            //setPadding(16, 5, 16, 5) // Agregar un poco de espaciado al contenedor
+
         }
         // Cargar la fuente medieval
         val typeface = ResourcesCompat.getFont(this, R.font.medieval)
@@ -408,7 +443,7 @@ class GameActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setPadding(16, 5, 0, 16)
+            //setPadding(16, 5, 0, 16)
         }
 
         // Crear el primer TextView con el contenido del texto arrastrado
@@ -441,10 +476,10 @@ class GameActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(0x2200FF00)
+            background = backgroundDrawable
             setPadding(
                 25,
-                100,
+                0,
                 0,
                 100
             )// Color de fondo para ver el área ocupada por el inner layout
@@ -462,10 +497,12 @@ class GameActivity : AppCompatActivity() {
         newLayout.addView(secondTextView)
 
         innerLinearLayout.id = View.generateViewId()
+        newLayout.id = View.generateViewId()
 
         val comando = Comando(TipoComandos.IF)
         comando.spinner = spinner
-        comando.layout = innerLinearLayout
+        comando.layoutDrop = innerLinearLayout
+        comando.layout = newLayout
 
 
         enableDragAndDrop(innerLinearLayout)
@@ -487,12 +524,19 @@ class GameActivity : AppCompatActivity() {
 
         val newVariable = createTextView(draggedText)
 
+
+
         newLayout.addView(newVariable)
 
         newLayout.id = View.generateViewId()
 
-        val comando = Comando(TipoComandos.ESTANTE)
+        val nombreComando = draggedText.replace(" ", "")
+
+        val tipoComando = TipoComandos.valueOf(nombreComando)
+
+        val comando = Comando(tipoComando)
         comando.layout = newLayout
+        comando.layoutDrop = newLayout
 
         return Pair(newLayout, comando)
 
@@ -544,18 +588,18 @@ class GameActivity : AppCompatActivity() {
 
     private fun setListPotions(): MutableList<String> {
         val listaPociones = mutableListOf<String>()
-        for (pocion in pociones) {
+        for (pocion in pocionesToSort) {
             listaPociones.add(pocion.key)
         }
         return listaPociones
 
     }
 
-    fun getIndex(parentLayout: LinearLayout, child: View): Pair<Int, Int> {
+    private fun getIndex(parentLayout: LinearLayout, child: View): Pair<Int, Int> {
         val parentGroup = parentLayout as ViewGroup
-        Log.d("ComandoId", parentLayout.id.toString())
+        Log.d("ComandoIdParent", parentLayout.id.toString())
         for (command in scriptTranscript) {  // Asumo que es scriptTranscript, no "scriptTrancript"
-            if (command.layout == parentLayout) {
+            if (command.layoutDrop == parentLayout) {
                 val index = parentLayout.indexOfChild(child)
                 val column: Int = command.column!!
 
@@ -568,4 +612,80 @@ class GameActivity : AppCompatActivity() {
         return Pair(0, index)
     }
 
+    private fun showLevelCompletedPopup(level: Int) {
+
+        levelCompletedLayout = findViewById(R.id.levelCompletedLayout)
+        continueButton = findViewById(R.id.continueButton)
+        restartButton = findViewById(R.id.restartButton)
+        levelMessage = findViewById(R.id.levelMessage)
+
+        // Mostrar el popup con el mensaje de nivel alcanzado
+        levelCompletedLayout.visibility = View.VISIBLE
+        levelMessage.text = "¡Has completado el nivel $level!"
+
+        // Puedes agregar animaciones para hacerlo más atractivo, por ejemplo:
+        levelCompletedLayout.alpha = 0f
+        levelCompletedLayout.animate().alpha(1f).setDuration(500).start()
+
+        // Configurar el botón de continuar
+        continueButton.setOnClickListener {
+            // Redirigir al menú o siguiente acción
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()
+        }
+
+        restartButton.setOnClickListener {
+            val intent = intent
+            finish()
+            startActivity(intent)
+        }
+
+
+    }
+    private fun inicializateNulls() {
+        Log.d("GameActivity", "null inicializate")
+        listaPociones.clear()
+        pocionesToSort.clear()
+        scriptTranscript.clear()
+        listComands.clear()
+        gameJob?.cancel()
+    }
+    private fun inicializateLevel(levelId: Int, user: User, TextPotions: TextView) {
+        Log.d("GameActivity", "null inicializate")
+        inicializateNulls()
+
+        val levelToLoad: Level = user.LevelsComplete.find { it.id == levelId }!!
+
+        pocionesToSort = levelToLoad.listPotions
+        loadPotions(pocionesToSort)
+
+        loadCommands(levelToLoad.listCommands)
+
+        TextPotions.text = pocionesToSort.entries.joinToString(", ") { "${it.key}: ${it.value}" }
+
+
+    }
+
+    private fun loadPotions(pociones: HashMap<String, Int>) {
+
+        for (pocion in pociones) {
+            for (i in 1..pocion.value) {
+                val pociontoCreate = Pocion(TipoPocion.valueOf(pocion.key))
+                listaPociones.add(pociontoCreate)
+            }
+        }
+
+        listaPociones.shuffle(Random(System.currentTimeMillis()))
+
+    }
+
+    private fun loadCommands (commands: List<String>){
+        for (command in commands){
+            val comando = Comando(TipoComandos.valueOf(command))
+            listComands.add(comando)
+        }
+
+    }
 }

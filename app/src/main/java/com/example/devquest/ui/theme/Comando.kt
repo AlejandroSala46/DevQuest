@@ -14,7 +14,11 @@ data class Comando(var tipoComandos: TipoComandos){
         set(parentLayout){
             field = parentLayout;
         }
-    var layout : LinearLayout? = null
+    var layoutDrop : LinearLayout? = null
+        set(layoutDrop){
+            field = layoutDrop;
+        }
+    var layout: LinearLayout? = null
         set(layout){
             field = layout;
         }
@@ -28,7 +32,7 @@ data class Comando(var tipoComandos: TipoComandos){
         }
 
     override fun toString(): String {
-        return "Comando(tipoComandos=$tipoComandos, nombreComando='$nombreComando', parentLayout=${parentLayout!!.id}, layout=${layout!!.id}, column=$column, row=$row)"
+        return "Comando(tipoComandos=$tipoComandos, nombreComando='$nombreComando', parentLayout=${parentLayout!!.id},layoutDrop=${layoutDrop!!.id}, ,layout=${layout!!.id}, column=$column, row=$row)"
     }
 
 
