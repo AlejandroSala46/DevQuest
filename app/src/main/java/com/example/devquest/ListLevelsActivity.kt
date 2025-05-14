@@ -35,7 +35,7 @@ class ListLevelsActivity : AppCompatActivity() {
 
     // Verifica si el nivel es el último no completado
     private fun isLastIncompleteLevel(levels: List<Level>): Int {
-        return levels.indexOfLast { !it.isCompleted }
+        return levels.indexOfFirst { !it.isCompleted }.takeIf { it != -1 }?.let { levels[it].id } ?: -1
     }
 
 

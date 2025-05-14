@@ -26,7 +26,7 @@ import com.example.devquest.ui.theme.TipoPocion
 import com.example.devquest.ui.theme.User
 import kotlin.random.Random
 import android.graphics.Color
-import androidx.appcompat.app.AlertDialog
+import android.widget.AdapterView
 import androidx.lifecycle.lifecycleScope
 import com.example.devquest.ui.theme.Level
 import kotlinx.coroutines.Job
@@ -36,27 +36,25 @@ import kotlinx.coroutines.launch
 
 
 class GameActivity : AppCompatActivity() {
-
+    //Variables globales
     private var listaPociones: ArrayList<Pocion> = ArrayList()
     private var pocionesToSort: HashMap<String, Int> = HashMap()
     private var scriptTranscript: ArrayList<Comando> = ArrayList()
     private var listComands: ArrayList<Comando> = ArrayList()
     private var gameJob: Job? = null
-    private lateinit var levelCompletedLayout: FrameLayout
-    private lateinit var continueButton: Button
-    private lateinit var restartButton: Button
-    private lateinit var levelMessage: TextView
+    private var gameSpeed: Long = 1000;
+    private var puntuacion: Int = 0;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play)
         Log.d("GameActivity", "onCreate")
 
-        val user = intent.getParcelableExtra<User>("USER")
+        var user = intent.getParcelableExtra<User>("USER")
         val levelId = intent.getIntExtra("LEVEL_ID", -1)
 
 
-
+        //Variables de la vista
         val commands = findViewById<LinearLayout>(R.id.Commands)
         val variables = findViewById<LinearLayout>(R.id.Variables)
         val script = findViewById<LinearLayout>(R.id.Script)
@@ -65,29 +63,49 @@ class GameActivity : AppCompatActivity() {
         val potionView: FrameLayout? = findViewById<FrameLayout>(R.id.Potion)
         val textPotions: TextView = findViewById(R.id.TextPotions)
 
+        //Inicializamos el nivel
         inicializateLevel(levelId ,user!!, textPotions)
 
+        //Obligamos a generar un ID para el script
         script.id = View.generateViewId()
 
+        //Y habilitamos que se puedan arrastrar los comandos
         enableDragAndDrop(script)
 
+        //Creamos tanto los arrastrables de las variables como de los comandos
         createCommands(commands, variables)
 
         var isGameRunning = false
+        var isFastMode = false
 
+        //Boton de play
         btnPlay.setOnClickListener { v: View? ->
             if (isGameRunning) {
                 // Si el juego está en marcha, lo detenemos
                 stopGame()
                 btnPlay.text = "Jugar"
+                btnExit.setOnClickListener { v: View? ->
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finish()  // Cierra la actividad actual
+                }
             } else {
                 // Si el juego no está en marcha, lo iniciamos
-                startGame(potionView, script)
+                startGame(potionView, script, user, levelId)
                 btnPlay.text = "Parar"
+                // Convertir botón en "cámara rápida"
+                btnExit.text = "Velocidad x2"
+                btnExit.setOnClickListener {
+                    isFastMode = !isFastMode
+                    toggleSpeedMode(isFastMode)
+                    btnExit.text = if (isFastMode) "Normal" else "Velocidad x2"
+                }
             }
             isGameRunning = !isGameRunning // Cambiar el estado del juego
         }
 
+        //Boton de exit default
         btnExit.setOnClickListener { v: View? ->
             val intent = Intent(this, MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -97,27 +115,38 @@ class GameActivity : AppCompatActivity() {
 
     }
 
+    //Funcion para cambiar la velicidad del juego
+    private fun toggleSpeedMode(isFastMode: Boolean) {
+        gameSpeed = if (isFastMode) 500 else 1000
+    }
+
+    //Funcion para parar el juego
     private fun stopGame(): Boolean {
         // Cancelar el juego en ejecución
         gameJob?.cancel()
         return false
     }
 
-    private fun startGame(potionView: FrameLayout?, script: LinearLayout) {
+    //Funcion de jugar, inicia la compilacion del codigo
+    private fun startGame(potionView: FrameLayout?, script: LinearLayout, user: User?, levelId: Int) {
+
+        //Ordenamos el script transcript por columna y fila
         scriptTranscript.sortWith(compareBy({ it.column }, { it.row }))
 
-        for (comando in scriptTranscript) {
-            Log.d("ComandoGame", comando.toString())
-        }
-
+        //Variable de victoria
         var win = true
-        gameJob = lifecycleScope.launch {
-            for (pocion in listaPociones) {
-                Log.d("GamePocion", pocion.toString())
 
+        //Iniciamos un lifescope de la compilacion del codigo
+        gameJob = lifecycleScope.launch {
+
+            //Recorremos la lista de pociones a ordenar
+            for (pocion in listaPociones) {
+
+                //Mostramos su imagen
                 potionView!!.setBackgroundResource(pocion.imagen)
 
                 val numEstante: Int? = playCommands(0, 0, script.id, pocion)
+
 
                 if (numEstante != null) {
                     if (numEstante == pocion.estante) {
@@ -134,23 +163,29 @@ class GameActivity : AppCompatActivity() {
                     break
                 }
 
-                // Esperar 5 segundos sin bloquear la UI
+
                 potionView!!.setBackgroundResource(0)
-                delay(1000)
+                delay(gameSpeed)
             }
-            if (win) {
-                showLevelCompletedPopup(1)
+            if (win) { //Si ganamos nos muestra el pop up de haber ganado
+                showLevelCompletedPopup(levelId, user)
+                user!!.LevelsComplete[levelId].isCompleted = true
+            }else if (!win){ //Si no ganamos nos muestra el pop up de haber perdido
+                showLevelFailedPopup(levelId, user)
             }
         }
 
 
     }
 
+    //Funcion para compilar los comandos
     private suspend fun playCommands(column: Int, row: Int, parent: Int, pocion: Pocion): Int? {
 
         val command: Comando?
         val colorRed = Color.parseColor("#FFFF9999")
         val colorBckgrnd = Color.parseColor("#FFFFCE9F")
+
+        puntuacion++; //Subimos la puntuacion cada vez que se entra en un bloque de codigo
 
         try {
             // Buscar el comando que coincide con las coordenadas
@@ -163,30 +198,29 @@ class GameActivity : AppCompatActivity() {
             return null
         }
 
-        // Espera 4 segundos sin bloquear la UI
-        //delay(4000)
 
         Log.d("GameActivity", "Comando: $command")
 
+        //Hacemos una funcion recursiva para ejecutar los comandos
         return when (command.tipoComandos.tipo) {
 
             TipoComandos.Tipo.IF -> {
-                val varControl = command.spinner!!.selectedItem.toString()
-                Log.d("GameActivity", "IF($varControl = ${pocion.type})")
 
-                delay(1000)
+                delay(gameSpeed)
                 command.layout!!.setBackgroundColor(colorBckgrnd)
 
-                if (ifCommand(pocion, varControl)) {
+                if (ifCommand(pocion, command)) { //Si el comando IF es true entramos en el bloque
 
+                    //Ejecutamos el comando que haya dentro del bloque
                     val nextCommand = playCommands(column + 1, 0, command.layoutDrop!!.id, pocion)
-                    // Después de 1 segundo, restaurar el color
+
+                    //Si la funcion nos devuelve null ejecutamos el siguiente comando
                     if (nextCommand == null) {
                         return playCommands(column, row + 1, parent, pocion)
-                    } else {
+                    } else { //Si no, devolvemos el comando
                         return nextCommand
                     }
-                } else {
+                } else { //Si no, simplemente pasamos al siguiente comando
                     Log.d("GameActivity", "FALSE")
                     return playCommands(column, row + 1, parent, pocion)
                 }
@@ -194,9 +228,9 @@ class GameActivity : AppCompatActivity() {
 
             TipoComandos.Tipo.ESTANTE -> {
                 val estante = command.nombreComando
-                val numEstante = extractNumFromEstante(estante)
+                val numEstante = extractNumFromEstante(estante) //Extraemos el numero del estante del texto
 
-                delay(1000)
+                delay(gameSpeed)
                 command.layout!!.setBackgroundColor(colorBckgrnd)
 
                 Log.d("GameActivity", "ESTANTE($estante) con numero $numEstante")
@@ -207,30 +241,24 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-
     private fun changeColorOfLayout(Layout: LinearLayout, color: Int) {
         val newDrawable = GradientDrawable()
         newDrawable.setColor(color)
         Layout.background = newDrawable
     }
 
-    private fun ifCommand(pocion: Pocion, varControl: String): Boolean {
-        return varControl == pocion.type
-    }
-
-    private fun varEstante(estante: String): Int? {
-        if (estante.contains("ESTANTE")) {
-
-            val numeroEstante = extractNumFromEstante(estante)
-
-            if (numeroEstante != null) {
-                return numeroEstante
-            } else {
-                return null
-            }
+    private fun ifCommand(pocion: Pocion, command: Comando): Boolean {
+        //Si comparamos los tipos de la pocion con el comando, devolvemos true si coinciden
+        if (command.spinnerCategoria!!.selectedItem.toString() == "Tipo") {
+            return pocion.type == command.spinnerOpcion!!.selectedItem.toString()
+        }
+        //Si comparamos los efectos de la pocion con el comando, devolvemos true si coinciden
+        else if (command.spinnerCategoria!!.selectedItem.toString() == "Efecto") {
+            return pocion.effect == command.spinnerOpcion!!.selectedItem.toString()
 
         }
-        return null
+        else (return false)
+
     }
 
     private fun extractNumFromEstante(estante: String): Int? {
@@ -247,10 +275,9 @@ class GameActivity : AppCompatActivity() {
 
     }
 
-
-
-
     private fun createCommands(commands: LinearLayout, variables: LinearLayout) {
+
+        //Creamos los comandos a partir de la lista de comandos
         for (command in listComands) {
 
             val textView = textCommands(command.nombreComando)
@@ -265,6 +292,7 @@ class GameActivity : AppCompatActivity() {
 
     }
 
+    //Generamos los text commands
     private fun textCommands(textCommand: String): TextView {
         val textView = TextView(this).apply {
             text = textCommand
@@ -288,6 +316,7 @@ class GameActivity : AppCompatActivity() {
         return textView
     }
 
+    //Habilitamos el drag de los comandos
     private fun setDrag(view: TextView) {
         view.setOnLongClickListener {
             val clipData = ClipData.newPlainText("COMMAND", view.text)
@@ -297,11 +326,13 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
+
+    //Funcion para habilitar el drag and drop en un LinearLayout
     private fun enableDragAndDrop(script: LinearLayout) {
         Log.d("DragEvent", "Drag enable on script")
         val originalColor = script.drawingCacheBackgroundColor
 
-        script.setOnDragListener { _, event ->
+        script.setOnDragListener { _, event -> //Listener de drag de los objetos
             when (event.action) {
                 DragEvent.ACTION_DRAG_STARTED -> {
                     // Comprobamos si el tipo MIME del clip es adecuado
@@ -330,7 +361,7 @@ class GameActivity : AppCompatActivity() {
 
                         var newLayoutCreation: Pair<LinearLayout, Comando>? = null
 
-
+                        //Creamos una comando o una variable en funcion de que arrastramos
                         if (it.text.toString() == "IF") {
                             newLayoutCreation = createDropLayoutCommand(it.text.toString())
                         } else if (it.text.toString().contains("ESTANTE")) {
@@ -342,40 +373,31 @@ class GameActivity : AppCompatActivity() {
 
                         script.addView(newLayout)
 
-                        val coords = getIndex(script, newLayout)
+                        val coords = getIndex(script, newLayout)//Conseguimos las coordenadas del nuevo layout
 
-
+                        //Añadimos el padre y las coordenadas al comando
                         comando.parentLayout = script
                         comando.column = coords.first
                         comando.row = coords.second
 
-                        scriptTranscript.add(comando)
+                        scriptTranscript.add(comando) //Añadimos el comando al scriptTranscript
 
-
-
-                        for (comando in scriptTranscript) {
-                            Log.d("Comando", comando.toString())
-                        }
-
-                        // Hacer que el nuevo TextView también sea arrastrable si es necesario
+                        // Hacer que el nuevo TextView también sea arrastrable
                         setDragLinear(newLayout)
-                        //setOnDragListenerForDelete(script, newLayout)
+
                     }
                     true
                 }
 
-                DragEvent.ACTION_DRAG_ENDED -> {
+                DragEvent.ACTION_DRAG_ENDED -> { //Funcion que comprueba si hay que eliminar algo
 
                     val layoutToRemove = event.localState as? LinearLayout
                     // Si el layout está fuera de la zona, eliminarlo
-                    if (!isInsideRelativeLayout(event, script) && layoutToRemove != null) {
+                    if (!isInsideLinearLayout(event, script) && layoutToRemove != null) {
 
                         script.removeView(layoutToRemove) // Eliminar el layout
-                        updateRowNumAfterDelete(layoutToRemove)
+                        updateRowNumAfterDelete(layoutToRemove) //Actualizamos el scriptTranscript
 
-                        for (comando in scriptTranscript) {
-                            Log.d("Comando", "Lista comandos despues de borrar: $comando")
-                        }
                     }
                     true
                 }
@@ -389,6 +411,8 @@ class GameActivity : AppCompatActivity() {
 
         val comandToRemove : Comando?
         Log.d("ComandoRemoveId", layautToRemove.id.toString())
+
+        //Recuperamos el comando que queremos eliminar del scriptTranscript
         try{
             comandToRemove = scriptTranscript.find { it.layout == layautToRemove }!!
         }catch (e: Exception){
@@ -397,6 +421,7 @@ class GameActivity : AppCompatActivity() {
         }
         Log.d("ComandoRemove", comandToRemove.toString())
 
+        //Actualizamos el scriptTranscript para no tener en cuenta ese comando
         for (comando in scriptTranscript.toList()) {
 
             if (comando.parentLayout == comandToRemove.parentLayout && comando.row!! > comandToRemove.row!!){
@@ -408,13 +433,13 @@ class GameActivity : AppCompatActivity() {
 
         }
 
+        //Eliminamos el comando
         scriptTranscript.removeIf{it.layout == comandToRemove.layout}
 
 
 
 
     }
-
 
     private fun createDropLayoutCommand(draggedText: String): Pair<LinearLayout, Comando> {
 
@@ -431,11 +456,10 @@ class GameActivity : AppCompatActivity() {
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.WRAP_CONTENT
             )
-            //setPadding(16, 5, 16, 5) // Agregar un poco de espaciado al contenedor
+
 
         }
-        // Cargar la fuente medieval
-        val typeface = ResourcesCompat.getFont(this, R.font.medieval)
+
 
         val conditionLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL // Alineación horizontal
@@ -449,13 +473,13 @@ class GameActivity : AppCompatActivity() {
         // Crear el primer TextView con el contenido del texto arrastrado
         val firstTextView = createTextView(draggedText)
 
-        // Crear el Spinner con opciones
-        val spinner = Spinner(this).apply {
-            val opciones = setListPotions()
+        // Spinner de categoría (Tipo o Efecto)
+        val spinnerCategoria = Spinner(this).apply {
+            val categorias = listOf("Tipo", "Efecto")
             adapter = ArrayAdapter(
                 this@GameActivity,
                 android.R.layout.simple_spinner_dropdown_item,
-                opciones
+                categorias
             )
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -464,14 +488,53 @@ class GameActivity : AppCompatActivity() {
             id = View.generateViewId()
         }
 
+
+        // Spinner de opciones dependientes
+        val spinnerOpciones = Spinner(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            id = View.generateViewId()
+        }
+
+        // Función para actualizar opciones según la categoría
+        fun actualizarOpciones(categoria: String) {
+            val opciones = when (categoria) {
+                "Tipo" -> listaPociones.map { it.type }.distinct()
+                "Efecto" -> setListPotions()
+                else -> emptyList()
+            }
+            val adapter = ArrayAdapter(
+                this@GameActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                opciones
+            )
+            spinnerOpciones.adapter = adapter
+        }
+
+        // Inicializar opciones con la categoría por defecto
+        actualizarOpciones("Tipo")
+
+        // Cambiar lista del segundo spinner cuando cambia la categoría
+        spinnerCategoria.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val categoriaSeleccionada = parent.getItemAtPosition(position) as String
+                actualizarOpciones(categoriaSeleccionada)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
         conditionLayout.addView(firstTextView)
-        conditionLayout.addView(spinner)
+        conditionLayout.addView(spinnerCategoria)
+        conditionLayout.addView(spinnerOpciones)
 
 
-        // Crear el segundo LinearLayout dentro del nuevo LinearLayout (puedes agregar más elementos aquí si lo necesitas)
+        // Crear el segundo LinearLayout dentro del nuevo LinearLayout
         val innerLinearLayout = LinearLayout(this).apply {
             orientation =
-                LinearLayout.VERTICAL // Puedes cambiar la orientación aquí si prefieres apilar horizontalmente
+                LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -485,11 +548,10 @@ class GameActivity : AppCompatActivity() {
             )// Color de fondo para ver el área ocupada por el inner layout
         }
 
-        // Crear el segundo TextView (esto puede ser otro tipo de información o elemento)
-
+        // Crear el segundo TextView
         val endDraggedText = "END" + draggedText
-
         val secondTextView = createTextView(endDraggedText)
+
 
         // Agregar los elementos al LinearLayout principal
         newLayout.addView(conditionLayout)
@@ -500,7 +562,8 @@ class GameActivity : AppCompatActivity() {
         newLayout.id = View.generateViewId()
 
         val comando = Comando(TipoComandos.IF)
-        comando.spinner = spinner
+        comando.spinnerCategoria = spinnerCategoria
+        comando.spinnerOpcion = spinnerOpciones
         comando.layoutDrop = innerLinearLayout
         comando.layout = newLayout
 
@@ -543,6 +606,9 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun createTextView(draggedText: String): TextView {
+        // Cargar la fuente medieval
+        val typeface = ResourcesCompat.getFont(this, R.font.medieval)
+
         val textView = TextView(this).apply {
             text = draggedText // Aquí puedes agregar un texto diferente si lo prefieres
             textSize = 15f
@@ -558,9 +624,8 @@ class GameActivity : AppCompatActivity() {
         return textView
     }
 
-
-    // Función para verificar si el layout está dentro del RelativeLayout
-    private fun isInsideRelativeLayout(event: DragEvent, script: LinearLayout): Boolean {
+    // Función para verificar si el layout está dentro del LinearLayout
+    private fun isInsideLinearLayout(event: DragEvent, script: LinearLayout): Boolean {
         val layoutRect = Rect()
         script.getGlobalVisibleRect(layoutRect)
 
@@ -586,6 +651,7 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
+    //Funcion para generar la lista de pociones que se ira mostrando en pantalla
     private fun setListPotions(): MutableList<String> {
         val listaPociones = mutableListOf<String>()
         for (pocion in pocionesToSort) {
@@ -595,12 +661,17 @@ class GameActivity : AppCompatActivity() {
 
     }
 
+    //Funcion para conseguir el indice de un elemento en el scriptTranscript
     private fun getIndex(parentLayout: LinearLayout, child: View): Pair<Int, Int> {
+
         val parentGroup = parentLayout as ViewGroup
         Log.d("ComandoIdParent", parentLayout.id.toString())
-        for (command in scriptTranscript) {  // Asumo que es scriptTranscript, no "scriptTrancript"
+
+        //Recorremos el scriptTranscript
+        for (command in scriptTranscript) {
+            //Si encontramos el padre del layout en el scriptTranscript
             if (command.layoutDrop == parentLayout) {
-                val index = parentLayout.indexOfChild(child)
+                val index = parentLayout.indexOfChild(child) //Obtenemos el indice del layout
                 val column: Int = command.column!!
 
                 return Pair(column.plus(1), index)
@@ -612,18 +683,22 @@ class GameActivity : AppCompatActivity() {
         return Pair(0, index)
     }
 
-    private fun showLevelCompletedPopup(level: Int) {
+    //Pop up de victoria
+    private fun showLevelCompletedPopup(level: Int, user: User?) {
 
-        levelCompletedLayout = findViewById(R.id.levelCompletedLayout)
-        continueButton = findViewById(R.id.continueButton)
-        restartButton = findViewById(R.id.restartButton)
-        levelMessage = findViewById(R.id.levelMessage)
+        //Recuperamos los elementos de la vista de victoria
+        val levelCompletedLayout = findViewById<FrameLayout>(R.id.levelCompletedLayout)
+        val continueButton = findViewById<Button>(R.id.continueButton)
+        val restartButton = findViewById<Button>(R.id.restartButton)
+        val levelMessage = findViewById<TextView>(R.id.levelMessage)
+        val score = findViewById<TextView>(R.id.scoreTextView)
 
         // Mostrar el popup con el mensaje de nivel alcanzado
         levelCompletedLayout.visibility = View.VISIBLE
         levelMessage.text = "¡Has completado el nivel $level!"
+        score.text = "Puntuación: $puntuacion"
 
-        // Puedes agregar animaciones para hacerlo más atractivo, por ejemplo:
+        // Animacion
         levelCompletedLayout.alpha = 0f
         levelCompletedLayout.animate().alpha(1f).setDuration(500).start()
 
@@ -632,6 +707,40 @@ class GameActivity : AppCompatActivity() {
             // Redirigir al menú o siguiente acción
             val intent = Intent(this, MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.putExtra("USER", user)
+            startActivity(intent)
+            finish()
+        }
+        //Reiniciamos la pantalla
+        restartButton.setOnClickListener {
+            val intent = intent
+            finish()
+            startActivity(intent)
+        }
+
+
+    }
+
+    //Pop up de derrota
+    private fun showLevelFailedPopup(level: Int, user: User?) {
+
+        val levelFailedLayout = findViewById<FrameLayout>(R.id.levelFailedLayout)
+        val restartButton = findViewById<Button>(R.id.retryButton)
+        val exitButton = findViewById<Button>(R.id.exitButton)
+
+        // Mostrar el popup con el mensaje de nivel alcanzado
+        levelFailedLayout.visibility = View.VISIBLE
+
+        //Animacion
+        levelFailedLayout.alpha = 0f
+        levelFailedLayout.animate().alpha(1f).setDuration(500).start()
+
+        // Configurar el botón de continuar
+        exitButton.setOnClickListener {
+            // Redirigir al menú o siguiente acción
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.putExtra("USER", user)
             startActivity(intent)
             finish()
         }
@@ -644,6 +753,8 @@ class GameActivity : AppCompatActivity() {
 
 
     }
+
+    //Inicializamos las variables a null
     private fun inicializateNulls() {
         Log.d("GameActivity", "null inicializate")
         listaPociones.clear()
@@ -651,13 +762,19 @@ class GameActivity : AppCompatActivity() {
         scriptTranscript.clear()
         listComands.clear()
         gameJob?.cancel()
+        gameSpeed = 1000;
+        puntuacion = 0;
     }
+
+    //Inicializamos el nivel
     private fun inicializateLevel(levelId: Int, user: User, TextPotions: TextView) {
         Log.d("GameActivity", "null inicializate")
         inicializateNulls()
 
+        //Buscamos el nivel que queremos cargar
         val levelToLoad: Level = user.LevelsComplete.find { it.id == levelId }!!
 
+        //Cargamos los datos del nivel
         pocionesToSort = levelToLoad.listPotions
         loadPotions(pocionesToSort)
 
@@ -668,6 +785,7 @@ class GameActivity : AppCompatActivity() {
 
     }
 
+    //Cargamos las pociones en la lista de pociones
     private fun loadPotions(pociones: HashMap<String, Int>) {
 
         for (pocion in pociones) {
@@ -681,6 +799,7 @@ class GameActivity : AppCompatActivity() {
 
     }
 
+    //Cargamos los comandos en la lista de comandos
     private fun loadCommands (commands: List<String>){
         for (command in commands){
             val comando = Comando(TipoComandos.valueOf(command))

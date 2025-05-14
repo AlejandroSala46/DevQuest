@@ -4,6 +4,7 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class User(
+    val auth: String,
     val name: String,
     val email: String,
     val password: String,
@@ -13,10 +14,12 @@ data class User(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
+        parcel.readString() ?: "",
         readLevelList(parcel) // Método auxiliar para leer la lista de niveles
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(auth)
         parcel.writeString(name)
         parcel.writeString(email)
         parcel.writeString(password)

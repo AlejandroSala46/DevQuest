@@ -5,14 +5,16 @@ import android.os.Parcelable
 
 data class Pocion(var tipo: TipoPocion) : Parcelable {
 
-    val type: String = tipo.name
+    val type: String = tipo.getType()
     val nombre: String = tipo.getNombre()
+    val effect: String = tipo.name
     val estante: Int = tipo.getEstante()
     val imagen: Int = tipo.getImagen()
 
     override fun toString(): String {
         return "Pocion{" +
                 "nombre='" + nombre + '\'' +
+                "efecto='" + effect + '\'' +
                 ", estante=" + estante +
                 '}'
     }

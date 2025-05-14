@@ -7,9 +7,10 @@ data class Level(
     val id: Int,
     val name: String,
     val description: String,
+    //val puntacion: Int,
     val listPotions: HashMap<String, Int>,
     val listCommands: List<String>,
-    val isCompleted: Boolean
+    var isCompleted: Boolean
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),

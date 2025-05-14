@@ -6,9 +6,13 @@ import android.widget.Spinner
 data class Comando(var tipoComandos: TipoComandos){
 
     val nombreComando: String = tipoComandos.nombreComando
-    var spinner: Spinner? = null
-        set(spinner){
-            field = spinner;
+    var spinnerCategoria: Spinner? = null
+        set(spinnerCategoria){
+            field = spinnerCategoria;
+        }
+    var spinnerOpcion: Spinner? = null
+        set(spinnerOpcion){
+            field = spinnerOpcion;
         }
     var parentLayout: LinearLayout? = null
         set(parentLayout){

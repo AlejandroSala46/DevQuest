@@ -33,7 +33,7 @@ class LoginActivity : AppCompatActivity() {
 
                         val user = createUser()
 
-                        //val user = RetrofitClient.apiService.login(loginRequest)
+                        //val user = RetrofitClient.apiServiceLogin.login(loginRequest)
 
                         if (user != null) {
                             Toast.makeText(this@LoginActivity, "Bienvenido, ${user.name}!", Toast.LENGTH_SHORT).show()
@@ -41,6 +41,7 @@ class LoginActivity : AppCompatActivity() {
                             finish()
                         } else {
                             Toast.makeText(this@LoginActivity, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
+
                         }
                     } catch (e: Exception) {
                         Toast.makeText(this@LoginActivity, "Error de conexión: ${e.message}", Toast.LENGTH_LONG).show()
@@ -72,6 +73,7 @@ class LoginActivity : AppCompatActivity() {
     }
     private fun createUser(): User{
         val user = User(
+            auth = "skdjbf",
             name = "JohnDoe",
             email = "johndoe@example.com",
             password = "hashed_password",  // Aunque no es recomendable enviar la contraseña de esta forma.
@@ -85,7 +87,7 @@ class LoginActivity : AppCompatActivity() {
                         "SALUD" to 1
                     ),
                     listCommands = listOf("IF", "ESTANTE1", "ESTANTE2"),  // Aquí utilizas una lista de comandos
-                    isCompleted = false
+                    isCompleted = true
                 ),
                 Level(
                     id = 2,
