@@ -7,14 +7,14 @@ data class User(
     val auth: String,
     val name: String,
     val email: String,
-    val password: String,
+    //val password: String,
     val LevelsComplete: List<Level> // Lista de niveles completos
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        parcel.readString() ?: "",
+        //parcel.readString() ?: "",
         readLevelList(parcel) // Método auxiliar para leer la lista de niveles
     )
 
@@ -22,7 +22,7 @@ data class User(
         parcel.writeString(auth)
         parcel.writeString(name)
         parcel.writeString(email)
-        parcel.writeString(password)
+        //parcel.writeString(password)
         writeLevelList(parcel, LevelsComplete) // Método auxiliar para escribir la lista de niveles
     }
 

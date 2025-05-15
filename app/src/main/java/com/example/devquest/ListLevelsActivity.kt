@@ -33,6 +33,15 @@ class ListLevelsActivity : AppCompatActivity() {
 
     }
 
+    @Suppress("MissingSuperCall")
+    override fun onBackPressed() {
+        val user = intent.getParcelableExtra<User>("USER")
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("USER", user)
+        startActivity(intent)
+        finish()
+    }
+
     // Verifica si el nivel es el último no completado
     private fun isLastIncompleteLevel(levels: List<Level>): Int {
         return levels.indexOfFirst { !it.isCompleted }.takeIf { it != -1 }?.let { levels[it].id } ?: -1

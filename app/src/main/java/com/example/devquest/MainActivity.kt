@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.devquest.ui.theme.User
 
@@ -26,7 +27,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        btnConfig.setOnClickListener { v: View? -> }
+        btnConfig.setOnClickListener { v: View? ->
+            Toast.makeText(this, "Configuración: To do por NATALIA", Toast.LENGTH_SHORT).show()
+        }
 
         btnExit.setOnClickListener { v: View? ->
             // Acciones para "Salir"

@@ -8,7 +8,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.devquest.API.LoginRequest
+import com.example.devquest.API.RegisterRequest
 import com.example.devquest.API.RetrofitClient
 import com.example.devquest.ui.theme.User
 import kotlinx.coroutines.launch
@@ -34,9 +34,9 @@ class RegisterActivity: AppCompatActivity(){
 
                 lifecycleScope.launch {
                     try {
-                        val registerRequest = LoginRequest(usuario, password)
+                        val registerRequest = RegisterRequest(email, password, usuario)
                         Log.d("API TESTS", "Testeando API con: $registerRequest")
-                        val user = RetrofitClient.apiServiceLogin.login(registerRequest)
+                        val user = RetrofitClient.apiService.register(registerRequest)
 
                         if (user != null) {
                             Toast.makeText(this@RegisterActivity, "Bienvenido, ${user.name}!", Toast.LENGTH_SHORT).show()

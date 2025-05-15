@@ -76,35 +76,84 @@ class LoginActivity : AppCompatActivity() {
             auth = "skdjbf",
             name = "JohnDoe",
             email = "johndoe@example.com",
-            password = "hashed_password",  // Aunque no es recomendable enviar la contraseña de esta forma.
+            //password = "hashed_password",
             LevelsComplete = listOf(
                 Level(
                     id = 1,
-                    name = "Level 1",
-                    description = "First level",
+                    name = "Nivel 1",
+                    description = "Combina veneno y salud",
                     listPotions = hashMapOf(
                         "VENENO" to 1,
                         "SALUD" to 1
                     ),
-                    listCommands = listOf("IF", "ESTANTE1", "ESTANTE2"),  // Aquí utilizas una lista de comandos
+                    listCommands = listOf("IF", "ESTANTE1", "ESTANTE2"),
                     isCompleted = true
                 ),
                 Level(
                     id = 2,
-                    name = "Level 2",
-                    description = "Second level",
+                    name = "Nivel 2",
+                    description = "Combina veneno y vigor",
+                    listPotions = hashMapOf(
+                        "VENENO" to 1,
+                        "VIGOR" to 1
+                    ),
+                    listCommands = listOf("IF", "ESTANTE1", "ESTANTE4"),
+                    isCompleted = false
+                ),
+                Level(
+                    id = 3,
+                    name = "Nivel 3",
+                    description = "Tres pociones simples",
+                    listPotions = hashMapOf(
+                        "VENENO" to 2,
+                        "SALUD" to 2,
+                        "VIGOR" to 1
+                    ),
+                    listCommands = listOf("IF", "ESTANTE1", "ESTANTE2", "ESTANTE4"),
+                    isCompleted = false
+                ),
+                Level(
+                    id = 4,
+                    name = "Nivel 4",
+                    description = "Introduce velocidad en la mezcla",
+                    listPotions = hashMapOf(
+                        "VENENO" to 2,
+                        "VELOCIDAD" to 2,
+                        "SALUD" to 2
+                    ),
+                    listCommands = listOf("IF", "ESTANTE1", "ESTANTE2", "ESTANTE3"),
+                    isCompleted = false
+                ),
+                Level(
+                    id = 5,
+                    name = "Nivel 5",
+                    description = "Cuatro tipos de pociones",
+                    listPotions = hashMapOf(
+                        "VENENO" to 10,
+                        "SALUD" to 3,
+                        "VELOCIDAD" to 2,
+                        "VIGOR" to 2
+                    ),
+                    listCommands = listOf("IF", "ESTANTE1", "ESTANTE2", "ESTANTE3", "ESTANTE4"),
+                    isCompleted = false
+                ),
+                Level(
+                    id = 6,
+                    name = "Nivel 6",
+                    description = "Más cantidad y lógica compleja",
                     listPotions = hashMapOf(
                         "VENENO" to 4,
                         "SALUD" to 6,
                         "VELOCIDAD" to 4,
                         "VIGOR" to 4
-
                     ),
                     listCommands = listOf("IF", "ESTANTE1", "ESTANTE2", "ESTANTE3", "ESTANTE4"),
                     isCompleted = false
                 )
             )
         )
+
+
 
         return user;
     }

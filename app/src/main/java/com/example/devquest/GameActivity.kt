@@ -87,6 +87,7 @@ class GameActivity : AppCompatActivity() {
                 btnExit.setOnClickListener { v: View? ->
                     val intent = Intent(this, MainActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.putExtra("USER", user)
                     startActivity(intent)
                     finish()  // Cierra la actividad actual
                 }
@@ -109,6 +110,7 @@ class GameActivity : AppCompatActivity() {
         btnExit.setOnClickListener { v: View? ->
             val intent = Intent(this, MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.putExtra("USER", user)
             startActivity(intent)
             finish()  // Cierra la actividad actual
         }
@@ -666,7 +668,9 @@ class GameActivity : AppCompatActivity() {
 
         val parentGroup = parentLayout as ViewGroup
         Log.d("ComandoIdParent", parentLayout.id.toString())
-
+        for (comando in scriptTranscript) {
+            Log.d("Comandos:", comando.toString())
+        }
         //Recorremos el scriptTranscript
         for (command in scriptTranscript) {
             //Si encontramos el padre del layout en el scriptTranscript
@@ -705,7 +709,7 @@ class GameActivity : AppCompatActivity() {
         // Configurar el botón de continuar
         continueButton.setOnClickListener {
             // Redirigir al menú o siguiente acción
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, ListLevelsActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.putExtra("USER", user)
             startActivity(intent)
