@@ -55,21 +55,25 @@
                     android:id="@+id/star1"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/potion_veneno" />
+                    android:src="@drawable/potion_veneno"
+                    android:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/star2"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    android:src="@drawable/potion_veneno" />
+                    android:src="@drawable/potion_veneno"
+                    android:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/star3"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    android:src="@drawable/potion_veneno" />
+                    android:src="@drawable/potion_veneno"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <TextView

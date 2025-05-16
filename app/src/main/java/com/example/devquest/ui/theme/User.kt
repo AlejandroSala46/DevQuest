@@ -5,25 +5,26 @@ import android.os.Parcelable
 
 data class User(
     val auth: String,
-    val name: String,
     val email: String,
+    val username: String,
+    val role: String,
     //val password: String,
-    val LevelsComplete: List<Level> // Lista de niveles completos
+    val levels_completed: List<Level> // Lista de niveles completos
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        //parcel.readString() ?: "",
-        readLevelList(parcel) // Método auxiliar para leer la lista de niveles
+        parcel.readString() ?: "",
+        readLevelList(parcel)
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(auth)
-        parcel.writeString(name)
         parcel.writeString(email)
-        //parcel.writeString(password)
-        writeLevelList(parcel, LevelsComplete) // Método auxiliar para escribir la lista de niveles
+        parcel.writeString(username)
+        parcel.writeString(role)
+        writeLevelList(parcel, levels_completed) // Método auxiliar para escribir la lista de niveles
     }
 
     override fun describeContents(): Int = 0
@@ -36,7 +37,7 @@ data class User(
             val size = parcel.readInt()
             val list = mutableListOf<Level>()
             repeat(size) {
-                list.add(parcel.readParcelable<Level>(Level::class.java.classLoader) ?: Level(0, "", "", hashMapOf(), emptyList(), false))
+                list.add(parcel.readParcelable<Level>(Level::class.java.classLoader) ?: Level(0, "", "", 0, hashMapOf(), emptyList(), false))
             }
             return list
         }

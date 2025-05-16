@@ -24,11 +24,11 @@
         android:textSize="34sp" />
 
     <EditText
-        android:id="@+id/etUsuario"
+        android:id="@+id/etEmail"
         android:layout_width="250dp"
         android:layout_height="60sp"
         android:background="@drawable/et_borde"
-        android:hint="Nombre de aventurero"
+        android:hint="Email del aventurero"
         android:padding="10dp" />
 
     <EditText

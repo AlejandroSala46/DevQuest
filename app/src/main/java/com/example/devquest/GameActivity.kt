@@ -27,6 +27,7 @@ import com.example.devquest.ui.theme.User
 import kotlin.random.Random
 import android.graphics.Color
 import android.widget.AdapterView
+import android.widget.ImageView
 import androidx.lifecycle.lifecycleScope
 import com.example.devquest.ui.theme.Level
 import kotlinx.coroutines.Job
@@ -64,7 +65,7 @@ class GameActivity : AppCompatActivity() {
         val textPotions: TextView = findViewById(R.id.TextPotions)
 
         //Inicializamos el nivel
-        inicializateLevel(levelId ,user!!, textPotions)
+        val level = inicializateLevel(levelId ,user!!, textPotions)
 
         //Obligamos a generar un ID para el script
         script.id = View.generateViewId()
@@ -93,7 +94,7 @@ class GameActivity : AppCompatActivity() {
                 }
             } else {
                 // Si el juego no está en marcha, lo iniciamos
-                startGame(potionView, script, user, levelId)
+                startGame(potionView, script, user, level)
                 btnPlay.text = "Parar"
                 // Convertir botón en "cámara rápida"
                 btnExit.text = "Velocidad x2"
@@ -130,7 +131,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     //Funcion de jugar, inicia la compilacion del codigo
-    private fun startGame(potionView: FrameLayout?, script: LinearLayout, user: User?, levelId: Int) {
+    private fun startGame(potionView: FrameLayout?, script: LinearLayout, user: User?, level: Level) {
 
         //Ordenamos el script transcript por columna y fila
         scriptTranscript.sortWith(compareBy({ it.column }, { it.row }))
@@ -170,10 +171,10 @@ class GameActivity : AppCompatActivity() {
                 delay(gameSpeed)
             }
             if (win) { //Si ganamos nos muestra el pop up de haber ganado
-                showLevelCompletedPopup(levelId, user)
-                user!!.LevelsComplete[levelId].isCompleted = true
+                showLevelCompletedPopup(level, user)
+                user!!.levels_completed[level.id].isCompleted = true
             }else if (!win){ //Si no ganamos nos muestra el pop up de haber perdido
-                showLevelFailedPopup(levelId, user)
+                showLevelFailedPopup(level.id, user)
             }
         }
 
@@ -688,7 +689,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     //Pop up de victoria
-    private fun showLevelCompletedPopup(level: Int, user: User?) {
+    private fun showLevelCompletedPopup(level: Level, user: User?) {
 
         //Recuperamos los elementos de la vista de victoria
         val levelCompletedLayout = findViewById<FrameLayout>(R.id.levelCompletedLayout)
@@ -699,12 +700,29 @@ class GameActivity : AppCompatActivity() {
 
         // Mostrar el popup con el mensaje de nivel alcanzado
         levelCompletedLayout.visibility = View.VISIBLE
-        levelMessage.text = "¡Has completado el nivel $level!"
+        val level_id = level.id
+        levelMessage.text = "¡Has completado el nivel $level_id!"
         score.text = "Puntuación: $puntuacion"
+
 
         // Animacion
         levelCompletedLayout.alpha = 0f
         levelCompletedLayout.animate().alpha(1f).setDuration(500).start()
+
+        val porc_punt = puntuacion/level.maxPuntacion
+        Log.d("Porcentaje", "% " + porc_punt.toString() + " = " + puntuacion + " / " + level.maxPuntacion + "")
+        //Establecer estrellas
+        val star1 = findViewById<ImageView>(R.id.star1)
+        star1.visibility = View.VISIBLE
+
+        if (porc_punt >= 1){
+            val star3 = findViewById<ImageView>(R.id.star3)
+            star3.visibility = View.VISIBLE
+        }
+        if(porc_punt >= 0.66){
+            val star2: ImageView = findViewById<ImageView>(R.id.star2)
+            star2.visibility = View.VISIBLE
+        }
 
         // Configurar el botón de continuar
         continueButton.setOnClickListener {
@@ -771,12 +789,12 @@ class GameActivity : AppCompatActivity() {
     }
 
     //Inicializamos el nivel
-    private fun inicializateLevel(levelId: Int, user: User, TextPotions: TextView) {
+    private fun inicializateLevel(levelId: Int, user: User, TextPotions: TextView): Level {
         Log.d("GameActivity", "null inicializate")
         inicializateNulls()
 
         //Buscamos el nivel que queremos cargar
-        val levelToLoad: Level = user.LevelsComplete.find { it.id == levelId }!!
+        val levelToLoad: Level = user.levels_completed.find { it.id == levelId }!!
 
         //Cargamos los datos del nivel
         pocionesToSort = levelToLoad.listPotions
@@ -786,7 +804,7 @@ class GameActivity : AppCompatActivity() {
 
         TextPotions.text = pocionesToSort.entries.joinToString(", ") { "${it.key}: ${it.value}" }
 
-
+        return levelToLoad
     }
 
     //Cargamos las pociones en la lista de pociones

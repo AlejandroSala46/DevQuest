@@ -7,7 +7,7 @@ data class Level(
     val id: Int,
     val name: String,
     val description: String,
-    //val puntacion: Int,
+    val maxPuntacion: Int,
     val listPotions: HashMap<String, Int>,
     val listCommands: List<String>,
     var isCompleted: Boolean
@@ -16,6 +16,7 @@ data class Level(
         parcel.readInt(),
         parcel.readString() ?: "",
         parcel.readString() ?: "",
+        parcel.readInt(),
         readStringIntMap(parcel),
         readStringList(parcel),  // Cambiado para manejar listCommands
         parcel.readByte() != 0.toByte()
@@ -25,6 +26,7 @@ data class Level(
         parcel.writeInt(id)
         parcel.writeString(name)
         parcel.writeString(description)
+        parcel.writeInt(maxPuntacion)
         writeStringIntMap(parcel, listPotions)
         writeStringList(parcel, listCommands)  // Cambiado para manejar listCommands
         parcel.writeByte(if (isCompleted) 1 else 0)
